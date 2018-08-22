@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+	<title>Bicyclist/Pedestrian Count Database</title>
+
+	<link rel="stylesheet" type="text/css" href="bike_ped.css">
+    
+	<!--<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?sensor=false&libraries=drawing"></script>-->
+	<script type="text/javascript" src="//maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+	<script type="text/javascript">
+ 
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-39489988-1']);
+	_gaq.push(['_setDomainName', 'ctps.org']);
+	_gaq.push(['_setAllowLinker', true]);
+	_gaq.push(['_trackPageview']);
+ 
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+ 
+	</script>
+	
+	<script src="bike_ped.js" type="text/javascript"></script>
+
+</head>
+
+<body onLoad="CTPS.bikePedApp.load()">
+
+	<div id="visContent">
+		<h1>Boston Region M<span style="display:none">.</span>P<span style="display:none">.</span>O<span style="display:none">.</span> Bicycle/Pedestrian Count Database</h1>
+		<div id="geoQuery">
+			<div id="mapMessage">
+				<div id="instructionDiv">
+					Search for a set of locations by selecting items from the 
+					pull-down menus below or by zooming in on the map.
+				</div><!-- instructionDiv -->
+				<div id="tabularQueryDiv">
+					<form name="tabularQuery" id="tabularQuery" role="search" aria-live="polite" aria-atomic="true">
+						<table id="tabularQueryTbl">
+							<tr>
+								<td class="tabularQueryTableCell" height="20"><b>Search by:</b></td>
+								<td style="text-align:right">
+									<input type="button" id="reset" value="New search" onClick="CTPS.bikePedApp.doQuery(999,true)" />
+								</td>
+							</tr>
+						</table>
+						<div class="queryListGroup" style="width:100%">
+							<label for="facility_name">Facility:</label>
+							<select name="facility_name" id="facility_name" size="1" style="width:100%" >
+								</select>
+						</div>
+						<div class="queryListGroup">
+							<label for="municipality">Municipality:</label>
+							<select name="municipality" id="municipality" size="1" style="width:100%" >
+							</select>
+						</div>&nbsp;
+						<div class="queryListGroup">
+							<label for="date">Year:</label>
+							<select name="date" id="date" size="1" style="width:100%" >
+							</select>
+						</div>
+                        <div id="queryButtonDiv" align="center">
+                            <input type="button" id="searchButton" value="Search for counts" onClick="CTPS.bikePedApp.doQuery('ignore',true)"/>
+                        </div>						
+						<div id="getDataGroup">
+							<div><input type="button" id="get_all_data" value="Get all selected data" onClick="CTPS.bikePedApp.openCountLocDetail('')"/></div>
+							<label for="format">Format:</label>
+							<select name="format" id="format" size="1" action="" onChange="CTPS.bikePedApp.saveSelectedFormat()">
+									<option value="html">html</option>
+								<script>
+									if (CTPS.bikePedApp.readCookie('outputFormat') === 'csv') {
+										document.writeln('<option value="csv" selected="selected">csv</option>');
+									} else {
+										document.writeln('<option value="csv">csv</option>');
+									}
+								</script>
+							</select>
+						</div>
+					</form>
+					
+					<!--- Hidden form used by openCountLocDetail function to open a detail page (HTML format) 
+						for one or more bike-ped count locations. --->
+					<form action="bike_ped_countloc_detail.cfm" method="get" name="detailRequestForm" id="detailRequestForm" 
+						target="_blank">
+						<input type="hidden" name="loc_id" id="loc_id">
+						<input type="hidden" name="html_municipality" id="html_municipality">
+						<input type="hidden" name="html_facility_name" id="html_facility_name">
+						<input type="hidden" name="html_date" id="html_date">
+					</form>
+					
+					<!--- Hidden form used by openCountLocDetail function to open a detail page (CSV format) 
+						for one or more bike-ped count locations. ---> 
+					<form action="bike_ped_countloc_detail_CSV.cfm" method="get" name="detailRequestFormCSV" id="detailRequestFormCSV" 
+						target="_blank">
+						<input type="hidden" name="csv_loc_id" id="csv_loc_id">
+						<input type="hidden" name="csv_municipality" id="csv_municipality">
+						<input type="hidden" name="csv_facility_name" id="csv_facility_name">
+						<input type="hidden" name="csv_date" id="csv_date">
+					</form>
+
+				</div><!-- tabularQueryDiv -->
+				<table id="mapMessageTable">
+					<tr>
+						<td style="width:35px;">
+							<IMG alt="Legend symbol of highlighted map marker" src="images/marker_link_blue.png">
+						</td>
+						<td id="legendTxtHiliteMarker" style="text-align:left;"><script type="text/javascript">
+							document.write(CTPS.bikePedApp.cLegendTxtHilite);
+							</script>
+						</td>
+					</tr>
+					<tr>
+						<td style="width:35px;"><script type="text/javascript">
+							document.write('<IMG alt="Legend symbol of regular map marker" src="' +
+									CTPS.bikePedApp.cSrcMarkerRegular + ' ">');
+							</script>
+						</td>
+						<td id="legendTxtRegularMarker" 
+							style="text-align:left;"><script type="text/javascript">
+							document.write(CTPS.bikePedApp.cLegendTxtRegular);
+							</script>
+						</td>
+						<td></td>
+					</tr>
+				</table><!-- mapMessageTable -->
+			</div><!-- mapMessage -->
+
+			<div id="map"></div><!-- map -->
+
+		</div><!-- geoQuery -->
+		
+		<div id="resultsContainer" role="main" aria-live="polite"><div id="results"></div></div>
+
+	</div><!-- visContent -->
+
+</body>
+
+</html>
